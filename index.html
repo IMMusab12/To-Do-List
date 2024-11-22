@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced To-Do List with Local Storage</title>
+    <link rel="shortcut icon" href="oc.jpeg" type="image/x-icon">
+    <style>
+        /* General Styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: #fff;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            width: 400px;
+            animation: fadeIn 0.6s ease;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .input-section input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            font-size: 16px;
+        }
+
+        .input-section button {
+            padding: 10px;
+            background: linear-gradient(145deg, #ff5f6d, #ffc371);
+            color: #fff;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .input-section button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        ul li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        ul li:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        ul li span {
+            flex: 1;
+        }
+
+        ul li button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .edit {
+            background: linear-gradient(145deg, #ffa726, #fb8c00);
+            color: #fff;
+        }
+
+        .delete {
+            background: linear-gradient(145deg, #e53935, #d32f2f);
+            color: #fff;
+        }
+
+        .send {
+            background: linear-gradient(145deg, #29b6f6, #039be5);
+            color: #fff;
+        }
+
+        /* Popup Modal */
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            width: 300px;
+            text-align: center;
+            display: none;
+            animation: fadeIn 0.3s ease;
+            z-index: 10;
+        }
+
+        .modal.active {
+            display: block;
+        }
+
+        .modal h2 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .modal button {
+            padding: 10px 20px;
+            background: linear-gradient(145deg, #4caf50, #388e3c);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .modal button:hover {
+            transform: scale(1.1);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 5;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Advanced To-Do List</h1>
+        <div class="input-section">
+            <input type="text" id="task-input" placeholder="Add a new task..." />
+            <button id="add-task">Add</button>
+        </div>
+        <ul id="task-list"></ul>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="modal" id="modal">
+        <h2 id="modal-message">Message</h2>
+        <button id="modal-close">Close</button>
+    </div>
+
+    <script>
+        const taskInput = document.getElementById("task-input");
+        const addTaskButton = document.getElementById("add-task");
+        const taskList = document.getElementById("task-list");
+
+        const modal = document.getElementById("modal");
+        const overlay = document.getElementById("overlay");
+        const modalMessage = document.getElementById("modal-message");
+        const modalClose = document.getElementById("modal-close");
+
+        function showModal(message) {
+            modalMessage.textContent = message;
+            modal.classList.add("active");
+            overlay.classList.add("active");
+        }
+
+        function hideModal() {
+            modal.classList.remove("active");
+            overlay.classList.remove("active");
+        }
+
+        modalClose.addEventListener("click", hideModal);
+        overlay.addEventListener("click", hideModal);
+
+        const updateLocalStorage = () => {
+            const tasks = [...taskList.children].map(li => ({
+                text: li.querySelector("span").textContent,
+            }));
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+        };
+
+        const loadTasks = () => {
+            const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+            tasks.forEach(task => addTask(task.text));
+        };
+
+        const addTask = (taskText) => {
+            if (taskText.trim() === "") return;
+
+            const li = document.createElement("li");
+            const span = document.createElement("span");
+            span.textContent = taskText;
+
+            const editButton = document.createElement("button");
+            editButton.textContent = "Edit";
+            editButton.classList.add("edit");
+            editButton.onclick = () => {
+                const newTask = prompt("Edit task:", span.textContent);
+                if (newTask) {
+                    span.textContent = newTask.trim();
+                    updateLocalStorage();
+                }
+            };
+
+            const deleteButton = document.createElement("button");
+            deleteButton.textContent = "Delete";
+            deleteButton.classList.add("delete");
+            deleteButton.onclick = () => {
+                li.remove();
+                updateLocalStorage();
+            };
+
+            const sendButton = document.createElement("button");
+            sendButton.textContent = "Send";
+            sendButton.classList.add("send");
+            sendButton.onclick = () => showModal(`Task Sent: ${span.textContent}`);
+
+            li.append(span, editButton, deleteButton, sendButton);
+            taskList.appendChild(li);
+            updateLocalStorage();
+        };
+
+        addTaskButton.addEventListener("click", () => {
+            addTask(taskInput.value);
+            taskInput.value = "";
+        });
+
+        taskInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                addTask(taskInput.value);
+                taskInput.value = "";
+            }
+        });
+
+        loadTasks();
+    </script>
+</body>
+</html>
