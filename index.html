@@ -7,14 +7,19 @@
     <link rel="shortcut icon" href="oc.jpeg" type="image/x-icon">
     <style>
         /* General Styling */
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Arial', sans-serif;
             margin: 0;
-            padding: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
+            min-height: 100dvh;
             background: linear-gradient(135deg, #6a11cb, #2575fc);
             color: #fff;
         }
@@ -25,14 +30,15 @@
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
             border-radius: 15px;
             padding: 20px;
-            width: 400px;
+            width: min(92vw, 460px);
             animation: fadeIn 0.6s ease;
         }
 
         h1 {
             text-align: center;
             color: #fff;
-            margin-bottom: 20px;
+            margin: 0 0 20px;
+            font-size: 24px;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
@@ -44,7 +50,8 @@
 
         .input-section input {
             flex: 1;
-            padding: 10px;
+            min-width: 0;
+            padding: 12px;
             border: none;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
@@ -52,10 +59,11 @@
         }
 
         .input-section button {
-            padding: 10px;
+            padding: 12px 18px;
             background: linear-gradient(145deg, #ff5f6d, #ffc371);
             color: #fff;
             font-weight: bold;
+            font-size: 16px;
             border: none;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
@@ -68,55 +76,141 @@
             box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
         }
 
-        ul {
+        .input-section button:focus-visible,
+        .task-actions button:focus-visible,
+        .modal button:focus-visible {
+            outline: 3px solid #ffd54f;
+            outline-offset: 2px;
+        }
+
+        /* The list owns the 3D perspective for its cards */
+        #task-list {
             list-style: none;
-            padding: 0;
+            padding: 4px 4px 12px;
             margin: 0;
+            perspective: 900px;
         }
 
-        ul li {
+        .task-card {
+            margin-bottom: 14px;
+            transform-style: preserve-3d;
+        }
+
+        .card-body {
+            position: relative;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.08));
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 14px;
+            padding: 12px 14px;
+            transform-style: preserve-3d;
+            will-change: transform;
+            /* layered shadows => real, raised depth */
+            box-shadow:
+                0 5px 0 rgba(0, 0, 0, 0.22),
+                0 10px 18px rgba(0, 0, 0, 0.35);
+            transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
+        }
+
+        .task-card:hover {
+            z-index: 10;
+        }
+
+        .task-card:hover .card-body {
+            box-shadow:
+                0 8px 0 rgba(0, 0, 0, 0.24),
+                0 18px 30px rgba(0, 0, 0, 0.45);
+        }
+
+        .task-view {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 10px;
-            margin-bottom: 10px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s, box-shadow 0.2s;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
-        ul li:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
+        .task-text {
+            flex: 1 1 140px;
+            min-width: 0;
+            overflow-wrap: anywhere;
+            font-size: 16px;
+            line-height: 1.35;
         }
 
-        ul li span {
-            flex: 1;
+        .task-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
         }
 
-        ul li button {
-            margin-left: 10px;
-            padding: 5px 10px;
+        .task-actions button {
+            padding: 7px 12px;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            transition: transform 0.15s, filter 0.15s;
+        }
+
+        .task-actions button:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
         }
 
         .edit {
             background: linear-gradient(145deg, #ffa726, #fb8c00);
-            color: #fff;
         }
 
         .delete {
             background: linear-gradient(145deg, #e53935, #d32f2f);
-            color: #fff;
         }
 
         .send {
             background: linear-gradient(145deg, #29b6f6, #039be5);
+        }
+
+        /* In-page edit form */
+        .task-edit {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .task-card.editing .task-view {
+            display: none;
+        }
+
+        .task-card.editing .task-edit {
+            display: flex;
+        }
+
+        .task-edit input {
+            flex: 1 1 140px;
+            min-width: 0;
+            padding: 9px 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .task-edit button {
+            padding: 9px 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
             color: #fff;
+        }
+
+        .save {
+            background: linear-gradient(145deg, #4caf50, #388e3c);
+        }
+
+        .cancel {
+            background: linear-gradient(145deg, #78909c, #546e7a);
         }
 
         /* Popup Modal */
@@ -125,11 +219,11 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            width: 300px;
+            width: min(88vw, 300px);
             text-align: center;
             display: none;
             animation: fadeIn 0.3s ease;
@@ -144,6 +238,7 @@
             margin-bottom: 15px;
             font-size: 18px;
             color: #333;
+            overflow-wrap: anywhere;
         }
 
         .modal button {
@@ -183,13 +278,54 @@
                 opacity: 1;
             }
         }
+
+        @media (max-width: 420px) {
+            body {
+                padding: 12px;
+            }
+
+            h1 {
+                font-size: 21px;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .task-actions {
+                width: 100%;
+            }
+
+            .task-actions button {
+                flex: 1;
+            }
+        }
+
+        /* Graceful degradation when CSS 3D transforms are unavailable */
+        @supports not (transform-style: preserve-3d) {
+            #task-list {
+                perspective: none;
+            }
+
+            .task-card,
+            .task-card:hover,
+            .card-body,
+            .task-card:hover .card-body {
+                transform: none !important;
+            }
+
+            .card-body,
+            .task-card:hover .card-body {
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Task List addd Your Task Here</h1>
+        <h1>Your Task List</h1>
         <div class="input-section">
-            <input type="text" id="task-input" placeholder="Add a new task..." />
+            <input type="text" id="task-input" placeholder="Add a new task..." aria-label="New task" />
             <button id="add-task">Add</button>
         </div>
         <ul id="task-list"></ul>
@@ -211,6 +347,8 @@
         const modalMessage = document.getElementById("modal-message");
         const modalClose = document.getElementById("modal-close");
 
+        const MAX_TILT = 12;
+
         function showModal(message) {
             modalMessage.textContent = message;
             modal.classList.add("active");
@@ -227,7 +365,7 @@
 
         const updateLocalStorage = () => {
             const tasks = [...taskList.children].map(li => ({
-                text: li.querySelector("span").textContent,
+                text: li.querySelector(".task-text").textContent,
             }));
             localStorage.setItem("tasks", JSON.stringify(tasks));
         };
@@ -237,38 +375,124 @@
             tasks.forEach(task => addTask(task.text));
         };
 
+        function startEditing(li, textSpan) {
+            const editInput = li.querySelector(".edit-input");
+            li.classList.add("editing");
+            editInput.value = textSpan.textContent;
+            editInput.focus();
+            editInput.select();
+        }
+
+        function stopEditing(li) {
+            li.classList.remove("editing");
+        }
+
         const addTask = (taskText) => {
             if (taskText.trim() === "") return;
 
             const li = document.createElement("li");
+            li.className = "task-card";
+
+            const cardBody = document.createElement("div");
+            cardBody.className = "card-body";
+
+            const view = document.createElement("div");
+            view.className = "task-view";
+
             const span = document.createElement("span");
-            span.textContent = taskText;
+            span.className = "task-text";
+            span.textContent = taskText.trim();
+
+            const actions = document.createElement("div");
+            actions.className = "task-actions";
 
             const editButton = document.createElement("button");
+            editButton.type = "button";
             editButton.textContent = "Edit";
             editButton.classList.add("edit");
-            editButton.onclick = () => {
-                const newTask = prompt("Edit task:", span.textContent);
-                if (newTask) {
-                    span.textContent = newTask.trim();
-                    updateLocalStorage();
-                }
-            };
+            editButton.setAttribute("aria-label", "Edit task");
+            editButton.onclick = () => startEditing(li, span);
 
             const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
             deleteButton.textContent = "Delete";
             deleteButton.classList.add("delete");
+            deleteButton.setAttribute("aria-label", "Delete task");
             deleteButton.onclick = () => {
                 li.remove();
                 updateLocalStorage();
             };
 
             const sendButton = document.createElement("button");
+            sendButton.type = "button";
             sendButton.textContent = "Send";
             sendButton.classList.add("send");
+            sendButton.setAttribute("aria-label", "Send task");
             sendButton.onclick = () => showModal(`Task Sent: ${span.textContent}`);
 
-            li.append(span, editButton, deleteButton, sendButton);
+            actions.append(editButton, deleteButton, sendButton);
+            view.append(span, actions);
+
+            const editForm = document.createElement("form");
+            editForm.className = "task-edit";
+
+            const editInput = document.createElement("input");
+            editInput.type = "text";
+            editInput.className = "edit-input";
+            editInput.setAttribute("aria-label", "Edit task text");
+
+            const saveButton = document.createElement("button");
+            saveButton.type = "submit";
+            saveButton.textContent = "Save";
+            saveButton.classList.add("save");
+
+            const cancelButton = document.createElement("button");
+            cancelButton.type = "button";
+            cancelButton.textContent = "Cancel";
+            cancelButton.classList.add("cancel");
+
+            editForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                const newText = editInput.value.trim();
+                if (newText !== "") {
+                    span.textContent = newText;
+                }
+                stopEditing(li);
+                updateLocalStorage();
+            });
+
+            cancelButton.addEventListener("click", () => {
+                stopEditing(li);
+            });
+
+            editInput.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") {
+                    stopEditing(li);
+                }
+            });
+
+            editForm.append(editInput, saveButton, cancelButton);
+            cardBody.append(view, editForm);
+            li.append(cardBody);
+
+            // Pointer-driven 3D tilt: the card leans toward the pointer and
+            // lifts above the rows behind it; it settles back on pointer leave.
+            li.addEventListener("pointermove", (e) => {
+                // The li keeps its layout box, so this measurement is stable
+                // while the inner card tilts.
+                const rect = li.getBoundingClientRect();
+                const px = (e.clientX - rect.left) / rect.width;
+                const py = (e.clientY - rect.top) / rect.height;
+                const rotateY = -(px - 0.5) * 2 * MAX_TILT;
+                const rotateX = (py - 0.5) * 2 * MAX_TILT;
+                cardBody.style.transform =
+                    `translateZ(40px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg)`;
+            });
+
+            li.addEventListener("pointerleave", () => {
+                cardBody.style.transform = "";
+            });
+
             taskList.appendChild(li);
             updateLocalStorage();
         };
@@ -276,6 +500,7 @@
         addTaskButton.addEventListener("click", () => {
             addTask(taskInput.value);
             taskInput.value = "";
+            taskInput.focus();
         });
 
         taskInput.addEventListener("keydown", (e) => {
