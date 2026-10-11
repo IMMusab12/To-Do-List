@@ -102,7 +102,9 @@
             border: 1px solid rgba(255, 255, 255, 0.35);
             border-radius: 14px;
             padding: 12px 14px;
-            transform-style: preserve-3d;
+            /* No preserve-3d on the transformed element itself: it is a leaf
+               plane with flat children, and keeping it flattened keeps hit
+               testing aligned with the rendered buttons while hovered. */
             will-change: transform;
             /* layered shadows => real, raised depth */
             box-shadow:
